@@ -26,16 +26,65 @@ export class TemplateConfig {
         readonly bootPrivateKey: string,
         readonly harvesterKey: string,
         readonly maxFee: number) { }
-
-    // todo: implement get methods
-
-    public createFromDTO(): TemplateConfig { throw new Error('not implemented') }
 }
 
 /**
  * Template model.
  */
 export class Template {
-    constructor(readonly templateName: string, readonly templateConfig: TemplateConfig) { }
-    public createFromDTO(): Template { throw new Error('not implemented') }
+    constructor(public readonly templateName: string, public readonly config: TemplateConfig) { }
+
+    /**
+    * Gets template name.
+    * @returns {string}
+    */
+    get name(): string {
+        return this.templateName
+    }
+
+    /**
+    * Gets node name.
+    * @returns {string}
+    */
+    get friendlyName(): string {
+        return this.config.friendlyName
+    }
+
+    /**
+    * Gets the max fee for the node.
+    * @returns {number}
+    */
+    get maxFee(): number {
+        return this.config.maxFee
+    }
+
+    /**
+    * Gets template name.
+    * @returns {string}
+    */
+    get harvesterKey(): string {
+        return this.config.harvesterKey
+    }
+
+    /**
+    * Gets the node's private boot key.
+    * @returns {string}
+    */
+    get bootPrivateKey(): string {
+        return this.config.bootPrivateKey
+    }
+
+    /**
+    * Creates a Template from a DTO.
+    * @param {TemplateDTO} templateDTO
+    * @returns {Template}
+    */
+    public static createFromDTO(templateDTO: TemplateDTO): Template {
+        const config = new TemplateConfig(
+            templateDTO.config.friendlyName,
+            templateDTO.config.bootPrivateKey,
+            templateDTO.config.harvesterKey,
+            templateDTO.config.maxFee)
+        return new Template(templateDTO.name, config)
+    }
 }

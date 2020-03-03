@@ -1,6 +1,7 @@
 import { Command } from 'clime'
 import { TemplateService } from '../services/template.service'
-import { TemplateRespoitory } from '../respositories/template.repository';
+import { TemplateRespoitory } from '../respositories/template.repository'
+import { Template } from '../models/template'
 
 export abstract class TemplateCommand extends Command {
     private readonly templateService: TemplateService
@@ -11,6 +12,6 @@ export abstract class TemplateCommand extends Command {
         this.templateService = new TemplateService(templateRepository)
     }
 
-    protected getDefault(): Template
+    protected getDefault(): Template { throw new Error('not implemented') }
 
 }

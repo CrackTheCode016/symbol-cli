@@ -1,0 +1,9 @@
+{
+    "name": "sample-template",
+    "config": {
+        "friendlyName": "friendlyNode123",
+        "bootPrivateKey": "bootKey",
+        "harvesterKey": "harvesterKey",
+        "maxFee": 10
+    }
+}
