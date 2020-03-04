@@ -1,5 +1,5 @@
 import { TemplateRespoitory } from '../respositories/template.repository'
-import { Template } from '../models/template';
+import { Template } from '../models/template'
 
 /**
  * Template service

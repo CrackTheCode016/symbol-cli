@@ -31,10 +31,9 @@ export class TemplateRespoitory {
 
     private stateFileUrl: string
     constructor(public readonly folderDir: string) {
-        fs.ensureDirSync(folderDir)
-        fs.ensureFileSync(path.join(folderDir, 'templates-state.json'))
+        fs.ensureDirSync(folderDir, { mode: 755 })
+        fs.writeJsonSync(path.join(folderDir, 'templates-state.json'), {}, { mode: 755 })
         this.stateFileUrl = path.join(folderDir, 'templates-state.json')
-        fs.writeJsonSync(this.stateFileUrl, {})
     }
 
     /**
@@ -46,7 +45,8 @@ export class TemplateRespoitory {
         if (target === undefined) {
             throw new Error('Template with name ' + name + ' does not exist')
         }
-        const templateDTO: TemplateDTO = JSON.parse(target)
+        const templateDTO: TemplateDTO =
+            fs.readJsonSync(path.join(this.folderDir, target, 'symbol-config.json'))
         templateDTO.defaultTemplate = true
         this.saveState(templateDTO)
     }
@@ -71,13 +71,14 @@ export class TemplateRespoitory {
             files.includes('seed') &&
             files.includes('resources') &&
             files.includes('symbol-config.json')) {
+
             const configFile = path.join(targetPath, 'symbol-config.json')
             const template = Template.createFromDTO(fs.readJsonSync(configFile))
             if (templateNames.includes(template.name)) {
-                throw new Error('Template with same name already registered!')
+                throw new Error('Template with name: ' + template.name + ' already exists!')
             }
             const dest = path.join(this.folderDir, template.name)
-            fs.ensureDirSync(dest)
+            fs.ensureDirSync(dest, { mode: 755 })
             fs.copySync(targetPath, dest)
             return template
         }
