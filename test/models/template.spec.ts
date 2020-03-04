@@ -5,7 +5,7 @@ describe('Template Model', () => {
 
     it('should create a template from constructor', () => {
         const config = new TemplateConfig('friendlyNode123', 'bootKey', 'harvesterKey', 0)
-        const template = new Template('test-template', config)
+        const template = new Template('test-template', false, config)
 
         expect(template.name).to.be.equal('test-template')
         expect(template.bootPrivateKey).to.be.equal('bootKey')
@@ -16,7 +16,7 @@ describe('Template Model', () => {
 
     it('should create a template from DTO', () => {
         const templateDTO: TemplateDTO = {
-            name: 'test-template', config: {
+            name: 'test-template', defaultTemplate: false, config: {
                 friendlyName: 'friendlyNode123',
                 bootPrivateKey: 'bootKey',
                 harvesterKey: 'harvesterKey',

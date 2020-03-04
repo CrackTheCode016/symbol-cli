@@ -8,7 +8,7 @@ export abstract class TemplateCommand extends Command {
 
     constructor(fileUrl?: string) {
         super()
-        const templateRepository = new TemplateRespoitory(fileUrl || '.symbolnode')
+        const templateRepository = new TemplateRespoitory(fileUrl || '.symbol-cli')
         this.templateService = new TemplateService(templateRepository)
     }
 

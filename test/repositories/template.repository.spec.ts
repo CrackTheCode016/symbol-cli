@@ -16,70 +16,97 @@
  *
  */
 import { expect } from 'chai'
+import * as fs from 'fs-extra'
 import { TemplateRespoitory } from '../../src/respositories/template.repository'
 
 describe('TemplateRepository', () => {
-    let fileUrl: string
+
+    let folderDir: string
     let templateUrl: string
 
-    let templateSampleDTO = {
-        name: 'sample-template',
-        config: {
+    const removeTemplatesDir = () => {
+        if (fs.existsSync(process.env.HOME + '/' + folderDir)) {
+            console.log('removed')
+            console.log(fs.existsSync(process.env.HOME + '/' + folderDir))
+            fs.removeSync(process.env.HOME + '/' + folderDir)
+        }
+    }
+
+    const templateSampleDTO = {
+        name: 'sample-template', defaultTemplate: false, config: {
             friendlyName: 'friendlyNode123',
             bootPrivateKey: 'bootKey',
             harvesterKey: 'harvesterKey',
             maxFee: 10,
         },
     }
-
     before(() => {
-        templateUrl = '../sample-template'
-        fileUrl = '.symbol-cli/'
+        removeTemplatesDir()
+        templateUrl = '/Users/bader/Documents/Coding/catapult-cli/symbol-cli/test/sample-template'
+        folderDir = process.env.HOME + '/.symbol-cli/'
+    })
+
+    beforeEach(() => {
+        console.log('beforeEach')
+        removeTemplatesDir()
+    })
+
+    after(() => {
+        console.log('after')
+        removeTemplatesDir()
     })
 
     it('should instantiate a new template repository', () => {
-        const templateRepository = new TemplateRespoitory(fileUrl)
+        const templateRepository = new TemplateRespoitory(folderDir)
         expect(templateRepository).to.not.be.equal(undefined)
-        expect(templateRepository['fileUrl']).to.be.equal(fileUrl)
+        expect(templateRepository['folderDir']).to.be.equal(folderDir)
     })
 
     it('should save a new template', () => {
-        const templateRepository = new TemplateRespoitory(fileUrl)
+        const templateRepository = new TemplateRespoitory(folderDir)
         const template = templateRepository.register(templateUrl)
         expect(template.name).to.be.equal(templateSampleDTO.name)
     })
 
     it('should get a specific template', () => {
-        const templateRepository = new TemplateRespoitory(fileUrl)
+        removeTemplatesDir()
+        const templateRepository = new TemplateRespoitory(folderDir)
         const template = templateRepository.getByName('sample-template')
         expect(template).to.not.be.equal(undefined)
         expect(template.name).to.be.equal('sample-template')
+        removeTemplatesDir()
     })
 
     it('should throw an error if there is a duplicate template', () => {
-        const templateRepository = new TemplateRespoitory(fileUrl)
-        expect(templateRepository.register(templateUrl)).to.throws('Template already exists')
+        const templateRepository = new TemplateRespoitory(folderDir)
+        expect(() => templateRepository.register(templateUrl)).to.throws(Error)
     })
 
-    it('throw an error if a template does not exist', () => {
-        const templateRepository = new TemplateRespoitory(fileUrl)
-        expect(templateRepository.getByName('some-template')).to.throws('Template is not registered')
+    it('should throw an error if a template does not exist', () => {
+        removeTemplatesDir()
+        const templateRepository = new TemplateRespoitory(folderDir)
+        expect(() => templateRepository.getByName('some-non-existent-template')).to.throws(Error)
+        removeTemplatesDir()
     })
 
     it('get all templates', () => {
-        const templateRepository = new TemplateRespoitory(fileUrl)
+        removeTemplatesDir()
+        const templateRepository = new TemplateRespoitory(folderDir)
         const templates = templateRepository.getAllTemplates()
         templateRepository.register(templateUrl)
         expect(templates).to.not.be.equal(undefined)
         expect(templates.length).to.be.equal(1)
+        removeTemplatesDir()
     })
 
     it('set and get a default selected template', () => {
-        const templateRepository = new TemplateRespoitory(fileUrl)
+        removeTemplatesDir()
+        const templateRepository = new TemplateRespoitory(folderDir)
         const template = templateRepository.register(templateUrl)
         templateRepository.setDefault('sample-template')
         const defaultTemplate = templateRepository.getDefault()
 
         expect(defaultTemplate.name).to.be.equal(template.name)
+        removeTemplatesDir()
     })
 })

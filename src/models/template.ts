@@ -14,6 +14,7 @@ export interface TemplateConfigDTO {
  */
 export interface TemplateDTO {
     name: string;
+    defaultTemplate: boolean;
     config: TemplateConfigDTO;
 }
 
@@ -32,7 +33,9 @@ export class TemplateConfig {
  * Template model.
  */
 export class Template {
-    constructor(public readonly templateName: string, public readonly config: TemplateConfig) { }
+    constructor(public readonly templateName: string,
+        private defaultTemplate: boolean,
+        public readonly config: TemplateConfig) { }
 
     /**
     * Gets template name.
@@ -40,6 +43,21 @@ export class Template {
     */
     get name(): string {
         return this.templateName
+    }
+
+    /**
+    * Gets whether a template is default.
+    * @returns {string}
+    */
+    get default(): boolean {
+        return this.defaultTemplate
+    }
+
+    /**
+    * Sets whether a template is default.
+    */
+    set default(v: boolean) {
+        this.defaultTemplate = v
     }
 
     /**
@@ -85,6 +103,6 @@ export class Template {
             templateDTO.config.bootPrivateKey,
             templateDTO.config.harvesterKey,
             templateDTO.config.maxFee)
-        return new Template(templateDTO.name, config)
+        return new Template(templateDTO.name, templateDTO.defaultTemplate, config)
     }
 }
