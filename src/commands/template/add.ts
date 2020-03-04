@@ -1,4 +1,5 @@
-import { TemplateCommand } from '../../interfaces/template.command'
+import { TemplateCommand, TemplateOptions, AddTemplateOptions } from '../../interfaces/template.command'
+import { metadata, command } from 'clime'
 
 /*
  *
@@ -18,7 +19,12 @@ import { TemplateCommand } from '../../interfaces/template.command'
  *
  */
 
-// todo: implement..
+@command({
+    description: 'Add a new template',
+})
 export default class extends TemplateCommand {
-    execute() { }
+    @metadata
+    execute(options: AddTemplateOptions) {
+        this.register(options)
+    }
 }

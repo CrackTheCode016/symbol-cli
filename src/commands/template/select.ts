@@ -1,4 +1,5 @@
-import { TemplateCommand } from '../../interfaces/template.command'
+import { TemplateCommand, TemplateOptions } from '../../interfaces/template.command'
+import { metadata, command } from 'clime'
 
 /*
  *
@@ -18,7 +19,12 @@ import { TemplateCommand } from '../../interfaces/template.command'
  *
  */
 
-// todo: implement..
+@command({
+    description: 'Select a template to use for the session',
+})
 export default class extends TemplateCommand {
-    execute() { }
+    @metadata
+    execute(options: TemplateOptions) {
+        this.setDefault(options)
+    }
 }

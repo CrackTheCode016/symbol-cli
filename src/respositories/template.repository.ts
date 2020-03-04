@@ -31,8 +31,10 @@ export class TemplateRespoitory {
 
     private stateFileUrl: string
     constructor(public readonly folderDir: string) {
-        fs.ensureDirSync(folderDir, { mode: 755 })
-        fs.writeJsonSync(path.join(folderDir, 'templates-state.json'), {}, { mode: 755 })
+        fs.ensureDirSync(folderDir)
+        if (!fs.pathExistsSync(path.join(folderDir, 'templates-state.json'))) {
+            fs.writeJsonSync(path.join(folderDir, 'templates-state.json'), {})
+        }
         this.stateFileUrl = path.join(folderDir, 'templates-state.json')
     }
 
