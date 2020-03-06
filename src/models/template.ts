@@ -1,3 +1,11 @@
+/**
+ * Node type.
+ */
+export enum NodeType {
+    Peer = 0,
+    Dual = 1,
+    Api = 2
+}
 
 /**
  * Template configuration data transfer object.
@@ -7,6 +15,7 @@ export interface TemplateConfigDTO {
     bootPrivateKey: string;
     harvesterKey: string;
     maxFee: number;
+    role: number;
 }
 
 /**
@@ -26,7 +35,8 @@ export class TemplateConfig {
         readonly friendlyName: string,
         readonly bootPrivateKey: string,
         readonly harvesterKey: string,
-        readonly maxFee: number) { }
+        readonly maxFee: number,
+        readonly nodeType: NodeType) { }
 }
 
 /**
@@ -55,9 +65,10 @@ export class Template {
 
     /**
     * Sets whether a template is default.
+    * @param {boolean} isDefault - Sets whether the template is default or not
     */
-    set default(v: boolean) {
-        this.defaultTemplate = v
+    set default(isDefault: boolean) {
+        this.defaultTemplate = isDefault
     }
 
     /**
@@ -74,6 +85,14 @@ export class Template {
     */
     get maxFee(): number {
         return this.config.maxFee
+    }
+
+    /**
+* Gets the max fee for the node.
+* @returns {number}
+*/
+    get nodeRole(): NodeType {
+        return this.config.nodeType
     }
 
     /**
@@ -102,7 +121,8 @@ export class Template {
             templateDTO.config.friendlyName,
             templateDTO.config.bootPrivateKey,
             templateDTO.config.harvesterKey,
-            templateDTO.config.maxFee)
+            templateDTO.config.maxFee,
+            templateDTO.config.role)
         return new Template(templateDTO.name, templateDTO.defaultTemplate, config)
     }
 }

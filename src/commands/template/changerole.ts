@@ -1,4 +1,5 @@
 import { TemplateCommand } from '../../interfaces/template.command'
+import { command } from 'clime';
 
 /*
  *
@@ -18,7 +19,9 @@ import { TemplateCommand } from '../../interfaces/template.command'
  *
  */
 
-// todo: implement..
+@command({
+    description: 'Change the role of a template configuration',
+})
 export default class extends TemplateCommand {
     execute() { }
 }

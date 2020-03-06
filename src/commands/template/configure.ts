@@ -1,4 +1,5 @@
 import { TemplateCommand } from '../../interfaces/template.command'
+import { command } from 'clime';
 
 /*
  *
@@ -17,7 +18,10 @@ import { TemplateCommand } from '../../interfaces/template.command'
  * limitations under the License.
  *
  */
-// todo: implement..
+
+@command({
+    description: 'Configure a certain parameter of your currently selected configuration',
+})
 export default class extends TemplateCommand {
     execute() { }
 }
