@@ -18,7 +18,7 @@
 import { expect } from 'chai'
 import * as fs from 'fs-extra'
 import { TemplateRespoitory } from '../../src/respositories/template.repository'
-import { Template } from '../../src/models/template'
+import { Template, NodeType } from '../../src/models/template'
 
 describe('TemplateRepository', () => {
 
@@ -34,6 +34,7 @@ describe('TemplateRepository', () => {
     const templateSampleDTO = {
         name: 'sample-template', defaultTemplate: false, config: {
             friendlyName: 'friendlyNode123',
+            role: NodeType.Dual,
             bootPrivateKey: 'bootKey',
             harvesterKey: 'harvesterKey',
             maxFee: 10,

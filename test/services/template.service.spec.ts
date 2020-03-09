@@ -19,13 +19,14 @@ import { expect } from 'chai'
 import { mock, instance, when } from 'ts-mockito'
 import { TemplateRespoitory } from '../../src/respositories/template.repository'
 import { TemplateService } from '../../src/services/template.service'
-import { Template } from '../../src/models/template'
+import { Template, NodeType } from '../../src/models/template'
 
 describe('Template Service', () => {
 
     const templateSampleDTO = {
         name: 'sample-template', defaultTemplate: false, config: {
             friendlyName: 'friendlyNode123',
+            role: NodeType.Dual,
             bootPrivateKey: 'bootKey',
             harvesterKey: 'harvesterKey',
             maxFee: 10,
@@ -35,6 +36,7 @@ describe('Template Service', () => {
     const templateSampleDTOArray = [{
         name: 'sample-template', defaultTemplate: false, config: {
             friendlyName: 'friendlyNode123',
+            role: NodeType.Dual,
             bootPrivateKey: 'bootKey',
             harvesterKey: 'harvesterKey',
             maxFee: 10,
@@ -43,6 +45,7 @@ describe('Template Service', () => {
     {
         name: 'sample-template-2', defaultTemplate: false, config: {
             friendlyName: 'friendlyNode125',
+            role: NodeType.Dual,
             bootPrivateKey: 'bootKei',
             harvesterKey: 'harvesterKei',
             maxFee: 1,
