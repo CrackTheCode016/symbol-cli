@@ -1,8 +1,9 @@
 import * as path from 'path'
-import * as preader from 'properties-reader'
-import { TemplateConfig, NodeType } from '../models/template'
+import * as fs from 'fs-extra'
+import * as _ from 'properties-reader'
+import { TemplateConfig, NodeType, Template, TemplateDTO } from '../models/template'
 import PropertiesReader = require('properties-reader')
-
+import { Peer, PeerFileDTO } from '../models/peer'
 
 /**
  * Resources property interface.
@@ -10,31 +11,6 @@ import PropertiesReader = require('properties-reader')
 export interface Property {
     propertyName: string;
     value: number | string | boolean;
-}
-
-/**
- * Peer endpoint interface.
- */
-export interface PeerEndpoint {
-    host: string;
-    port: number;
-}
-
-/**
- * Peer metadata interface.
- */
-export interface PeerMetadata {
-    name: string;
-    roles: string;
-}
-
-/**
- * Resources peer interface.
- */
-export interface Peer {
-    publicKey: string;
-    endpoint: PeerEndpoint;
-    metadata: PeerMetadata;
 }
 
 /**
@@ -64,11 +40,13 @@ export class ResourcesEditor {
         .concat(this.API_EXTENSIONS, this.PEER_EXTENSIONS)
 
     private resourcesPath: string
+    private templateConfigPath: string
     private readonly PEER_P2P = 'peers-p2p.json'
     private readonly PEER_API = 'peers-api.json'
 
     constructor(public readonly templateUrl: string) {
         this.resourcesPath = path.join(templateUrl, 'resources')
+        this.templateConfigPath = path.join(templateUrl, 'symbol-config.json')
     }
 
     /**
@@ -76,7 +54,12 @@ export class ResourcesEditor {
      * @param {string} alternativeConfigUrl - Alternative configuration file
      */
     public applyConfig(alternativeConfigUrl?: string) {
-        throw new Error('not implemented')
+        let template: Template
+        if (alternativeConfigUrl) {
+            template = Template.createFromDTO(fs.readJsonSync(alternativeConfigUrl))
+        }
+        template = Template.createFromDTO(fs.readJsonSync(this.templateConfigPath))
+
     }
 
     /**
@@ -90,49 +73,71 @@ export class ResourcesEditor {
      * changeBootKey
      */
     public changeBootKey(newBootKey: string) {
-        throw new Error('not implemented')
+        const template: TemplateDTO = fs.readJsonSync(this.templateConfigPath)
+        template.config.bootPrivateKey = newBootKey
+        fs.writeJsonSync(this.templateConfigPath, template)
     }
 
     /**
     * changeHarvestingKey
     */
     public changeHarvestingKey(newHarvesterKey: string) {
-        throw new Error('not implemented')
+        const template: TemplateDTO = fs.readJsonSync(this.templateConfigPath)
+        template.config.harvesterKey = newHarvesterKey
+        fs.writeJsonSync(this.templateConfigPath, template)
     }
 
     /**
      * changeFriendlyName
      */
     public changeFriendlyName(newFriendlyName: string) {
-        throw new Error('not implemented')
+        const template: TemplateDTO = fs.readJsonSync(this.templateConfigPath)
+        template.config.friendlyName = newFriendlyName
+        fs.writeJsonSync(this.templateConfigPath, template)
     }
 
     /**
      * changeMaxFee
      */
     public changeMaxFee(newMaxFee: number) {
-        throw new Error('not implemented')
+        const template: TemplateDTO = fs.readJsonSync(this.templateConfigPath)
+        template.config.maxFee = newMaxFee
+        fs.writeJsonSync(this.templateConfigPath, template)
     }
 
     /**
      * Change Role - Change the node's role via its extensions.
      */
     public changeTopology(type: NodeType) {
-        throw new Error('not implemented')
+        const template: TemplateDTO = fs.readJsonSync(this.templateConfigPath)
+        template.config.role = type
+        fs.writeJsonSync(this.templateConfigPath, template)
     }
 
     /**
      * addNewPeer - Adds a new peer to peers.json
      */
-    public addNewPeer(publicKey: string, ip: string, role: NodeType) {
-        throw new Error('not implemented')
+    public addNewPeer(name: string, publicKey: string, ip: string, role: NodeType) {
+        const peersP2PFile: PeerFileDTO = fs.readJsonSync(path.join(this.resourcesPath, this.PEER_P2P))
+        const peersApiFile: PeerFileDTO = fs.readJsonSync(path.join(this.resourcesPath, this.PEER_API))
+        const newPeer = new Peer(publicKey, name, ip, role).toDTOForStorage()
+        peersP2PFile.knownPeers.push(newPeer)
+        peersApiFile.knownPeers.push(newPeer)
+
+        fs.writeJsonSync(path.join(this.resourcesPath, this.PEER_P2P), peersP2PFile)
+        fs.writeJsonSync(path.join(this.resourcesPath, this.PEER_API), peersApiFile)
     }
 
     /**
-     * getPeers - Adds a new peer to peers.json
+     * getPeers - Loads peers from peers-p2p
      */
     public getPeers(): Peer[] {
-        throw new Error('not implemented')
+        const peers: Peer[] = []
+        const peersP2PFile: PeerFileDTO = fs.readJsonSync(path.join(this.resourcesPath, this.PEER_P2P))
+        for(let peer of peersP2PFile.knownPeers) {
+            peers.push(new Peer(peer.publicKey, peer.metadata.name, peer.endpoint.host, peer.metadata.roles))
+        }
+        return peers
     }
 
     /**
