@@ -8,9 +8,9 @@ import { Peer, PeerFileDTO } from '../models/peer'
 /**
  * Resources property interface.
  */
-export interface Property {
+interface Property {
     propertyName: string;
-    value: number | string | boolean;
+    value: number | string | boolean | null;
 }
 
 /**
@@ -26,7 +26,10 @@ export class ResourcesEditor {
 
     private readonly API_CONFIG_NAMES: string[] = ['database', 'messaging', 'pt']
 
-    private readonly API_EXTENSIONS: string[] = ['filespooling', 'partialtransaction']
+    private readonly API_EXTENSIONS: Property[] = [
+        { propertyName: 'filespooling', value: true },
+        { propertyName: 'partialtransaction', value: true },
+    ]
 
     private readonly BROKER_EXTENSIONS: string[] = ['addressextraction', 'mongo', 'zeromq', 'hashcache']
 
@@ -36,8 +39,8 @@ export class ResourcesEditor {
 
     private readonly PEER_EXTENSIONS: string[] = ['harvesting', 'syncsource']
 
-    private readonly DUAL_EXTENSIONS: string[] = this.SHARED_EXTENSIONS
-        .concat(this.API_EXTENSIONS, this.PEER_EXTENSIONS)
+    // private readonly DUAL_EXTENSIONS: string[] = this.SHARED_EXTENSIONS
+    //     .concat(this.API_EXTENSIONS, this.PEER_EXTENSIONS)
 
     private resourcesPath: string
     private templateConfigPath: string
@@ -60,13 +63,31 @@ export class ResourcesEditor {
         }
         template = Template.createFromDTO(fs.readJsonSync(this.templateConfigPath))
 
+        this.changeUserProperties(template.config)
+        this.changeNodeProperties(template.config)
+        this.changeHarvestingProperties(template.config)
+
+        if (template.nodeRole === NodeType.Peer) {
+            this.changeExtentionsProperties(this.API_EXTENSIONS)
+        } else if (template.nodeRole === NodeType.Api) {
+            this.changeExtentionsProperties(this.API_EXTENSIONS)
+        } else if (template.nodeRole === NodeType.Dual) {
+            this.changeExtentionsProperties(this.API_EXTENSIONS)
+        }
+        else { throw new Error('Unknown node role type') }
+
     }
 
     /**
      * readSelectedParameter
      */
     public readSelectedParameter(propertyName: string, resourceName: string): Property {
-        throw new Error('not implemented')
+        const fileUrl = this.buildResourceFileUrl(resourceName)
+        const loadedProperties = PropertiesReader(fileUrl)
+        if (loadedProperties !== null) {
+            return { propertyName, value: loadedProperties.get(propertyName) }
+        }
+        throw new Error('Property is null or does not exist')
     }
 
     /**
@@ -129,12 +150,12 @@ export class ResourcesEditor {
     }
 
     /**
-     * getPeers - Loads peers from peers-p2p
+     * getPeers - Loads peers from peers-p2p.json
      */
     public getPeers(): Peer[] {
         const peers: Peer[] = []
         const peersP2PFile: PeerFileDTO = fs.readJsonSync(path.join(this.resourcesPath, this.PEER_P2P))
-        for(let peer of peersP2PFile.knownPeers) {
+        for (let peer of peersP2PFile.knownPeers) {
             peers.push(new Peer(peer.publicKey, peer.metadata.name, peer.endpoint.host, peer.metadata.roles))
         }
         return peers
@@ -162,11 +183,12 @@ export class ResourcesEditor {
     }
 
     /**
-     * changeLoggingProperties - Changes the logging configuration.
+     * changeHarvestingProperties - Changes harvesting properties given a template configuration.
      */
-    private changeLoggingProperties() {
+    private changeHarvestingProperties(config: TemplateConfig) {
         throw new Error('not implemented')
     }
+
 
     /**
     * buildResourceFileUrl - Build a valid resource file name.
@@ -182,7 +204,9 @@ export class ResourcesEditor {
         const fileUrl = this.buildResourceFileUrl(file)
         const loadedProperties = PropertiesReader(fileUrl)
         for (let property of properties) {
-            loadedProperties.set(property.propertyName, property.value)
+            if (property.value !== null) {
+                loadedProperties.set(property.propertyName, property.value)
+            }
         }
         loadedProperties.save(fileUrl)
     }

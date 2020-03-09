@@ -1,15 +1,24 @@
 import { expect } from 'chai'
+import * as fs from 'fs-extra'
 import { ResourcesEditor } from '../../src/respositories/resources.editor.repository'
 import { NodeType } from '../../src/models/template'
 
 describe('Resource Editor', () => {
 
-    let templateUrl: string
-    let alternateConfigUrl: string
+    const templateUrl = './test/mocks/sample-template'
+    const alternateConfigUrl = './test/mocks/sample-template/other-config-file.json'
+
+    const loadConfigFile = () => fs.readJsonSync(templateUrl + '/symbol-config.json')
+
+    const copyResources = () => fs.copySync('./test/mocks/resources', './test/mocks/sample-template/resources')
+    const deleteResources = () => fs.removeSync('./test/mocks/sample-template/resources')
 
     before(() => {
-        templateUrl = './test/mocks/sample-template'
-        alternateConfigUrl = './test/mocks/sample-template/other-config-file.json'
+        copyResources()
+    })
+
+    after(() => {
+        deleteResources()
     })
 
     it('should create a new repository', () => {
@@ -20,39 +29,32 @@ describe('Resource Editor', () => {
     it('should change the maxfee', () => {
         const editorRepository = new ResourcesEditor(templateUrl)
         editorRepository.changeMaxFee(100)
-        editorRepository.applyConfig()
-        const maxFeeProperty = editorRepository.readSelectedParameter('node.minFeeMultiplier', 'node')
-        expect(maxFeeProperty.propertyName).to.be.equal('node.minFeeMultiplier')
-        expect(maxFeeProperty.value).to.be.equal(100)
+        const maxFeeProperty = loadConfigFile().config.maxFee
+        expect(maxFeeProperty).to.be.equal(100)
 
     })
 
     it('should change the boot private key', () => {
         const editorRepository = new ResourcesEditor(templateUrl)
         editorRepository.changeBootKey('1000000000000000000000000000000000000000000000000000000000000001')
-        editorRepository.applyConfig()
-        const bootKeyProperty = editorRepository.readSelectedParameter('account.bootPrivateKey', 'user')
-        expect(bootKeyProperty.propertyName).to.be.equal('account.bootPrivateKey')
-        expect(bootKeyProperty.value).to.be.equal('1000000000000000000000000000000000000000000000000000000000000001')
+        const bootKeyProperty = loadConfigFile().config.bootPrivateKey
+        expect(bootKeyProperty).to.be.equal('1000000000000000000000000000000000000000000000000000000000000001')
 
     })
 
     it('should change the harvester key', () => {
         const editorRepository = new ResourcesEditor(templateUrl)
-        editorRepository.changeBootKey('1000000000000000000000000000000000000000000000000000000000000001')
-        editorRepository.applyConfig()
-        const bootKeyProperty = editorRepository.readSelectedParameter('account.bootPrivateKey', 'user')
-        expect(bootKeyProperty.propertyName).to.be.equal('account.bootPrivateKey')
-        expect(bootKeyProperty.value).to.be.equal('1000000000000000000000000000000000000000000000000000000000000001')
+        editorRepository.changeHarvestingKey('1000000000000000000000000000000000000000000000000000000000000001')
+        const harvesterKey = loadConfigFile().config.harvesterKey
+        console.log(loadConfigFile())
+        expect(harvesterKey).to.be.equal('1000000000000000000000000000000000000000000000000000000000000001')
     })
 
     it('should change the friendly name', () => {
         const editorRepository = new ResourcesEditor(templateUrl)
-        editorRepository.changeHarvestingKey('2220000000000000000000000000000000000000000000000000000000000001')
-        editorRepository.applyConfig()
-        const harvestingKeyProperty = editorRepository.readSelectedParameter('harvesting.harvesterPrivateKey', 'user')
-        expect(harvestingKeyProperty.propertyName).to.be.equal('account.bootPrivateKey')
-        expect(harvestingKeyProperty.value).to.be.equal('2220000000000000000000000000000000000000000000000000000000000001')
+        editorRepository.changeFriendlyName('cool-name')
+        const friendlyName = loadConfigFile().config.friendlyName
+        expect(friendlyName).to.be.equal('cool-name')
     })
 
     it('should add a new peer to the resources', () => {
@@ -76,7 +78,7 @@ describe('Resource Editor', () => {
     it('should change the topology of a node', () => {
         const editorRepository = new ResourcesEditor(templateUrl)
         editorRepository.changeTopology(NodeType.Dual)
-        const nodeRoles = editorRepository.readSelectedParameter('localnode.roles', 'node')
-        expect(nodeRoles.value).to.be.equal('Peer,Api')
+        const role = loadConfigFile().config.role
+        expect(role).to.be.equal(NodeType.Dual)
     })
 })
