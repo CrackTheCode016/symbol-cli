@@ -15,12 +15,13 @@
  * limitations under the License.
  *
  */
-import {command, metadata, option} from 'clime'
-import {ReceiptHttp} from 'symbol-sdk'
-import {ProfileCommand, ProfileOptions} from '../../interfaces/profile.command'
+import {ProfileCommand} from '../../interfaces/profile.command'
+import {ProfileOptions} from '../../interfaces/profile.options'
 import {HeightResolver} from '../../resolvers/height.resolver'
-import {ReceiptService} from '../../services/receipt.service'
 import {HttpErrorHandler} from '../../services/httpErrorHandler.service'
+import {ReceiptHttp} from 'symbol-sdk'
+import {command, metadata, option} from 'clime'
+import {StatementsView} from '../../views/statements/statements.view'
 
 export class CommandOptions extends ProfileOptions {
     @option({
@@ -34,31 +35,21 @@ export class CommandOptions extends ProfileOptions {
     description: 'Get the receipts triggered for a given block height',
 })
 export default class extends ProfileCommand {
-    private readonly receiptService: ReceiptService
-
     constructor() {
         super()
-        this.receiptService = new ReceiptService()
     }
 
     @metadata
-    execute(options: CommandOptions) {
-        this.spinner.start()
+    async execute(options: CommandOptions) {
         const profile = this.getProfile(options)
-        const height = new HeightResolver().resolve(options)
+        const height =  await new HeightResolver().resolve(options)
 
+        this.spinner.start()
         const receiptHttp = new ReceiptHttp(profile.url)
         receiptHttp.getBlockReceipts(height)
             .subscribe((statement: any) => {
                 this.spinner.stop(true)
-                let txt = ''
-                txt += this.receiptService.formatTransactionStatements(statement)
-                txt += this.receiptService.formatAddressResolutionStatements(statement)
-                txt += this.receiptService.formatMosaicResolutionStatements(statement)
-                if ('' === txt) {
-                    txt = '[]'
-                }
-                console.log(txt)
+                new StatementsView(statement).print()
             }, (err) => {
                 this.spinner.stop(true)
                 console.log(HttpErrorHandler.handleError(err))

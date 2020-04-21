@@ -15,14 +15,24 @@
  * limitations under the License.
  *
  */
-import {expect} from 'chai'
 import {DefaultResolver} from '../../src/resolvers/default.resolver'
+import {expect} from 'chai'
 
 describe('Default resolver', () => {
 
-    it('should return boolean', () => {
-        const profileOptions = {save: false, url: '', network: '', profile: '', password: '', default: true, generationHash: '1'}
-        expect(new DefaultResolver().resolve(profileOptions)).to.be.equal(true)
+    it('should return boolean', async () => {
+        const options = {
+            save: false,
+            url: '',
+            network: '',
+            profile: '',
+            password: '',
+            default: true,
+            generationHash: '1',
+            namespaceId: '',
+            divisibility: 0,
+        }
+        expect(await new DefaultResolver().resolve(options)).to.be.equal(true)
     })
 
 })

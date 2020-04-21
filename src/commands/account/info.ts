@@ -15,6 +15,10 @@
  * limitations under the License.
  *
  */
+import {ProfileCommand} from '../../interfaces/profile.command'
+import {ProfileOptions} from '../../interfaces/profile.options'
+import {AddressResolver} from '../../resolvers/address.resolver'
+import {HttpErrorHandler} from '../../services/httpErrorHandler.service'
 import chalk from 'chalk'
 import * as Table from 'cli-table3'
 import {HorizontalTable} from 'cli-table3'
@@ -22,7 +26,6 @@ import {command, metadata, option} from 'clime'
 import {
     AccountHttp,
     AccountInfo,
-    Address,
     MosaicAmountView,
     MosaicHttp,
     MosaicService,
@@ -32,9 +35,6 @@ import {
 } from 'symbol-sdk'
 import {forkJoin, of} from 'rxjs'
 import {catchError, mergeMap, toArray} from 'rxjs/operators'
-import {ProfileCommand, ProfileOptions} from '../../interfaces/profile.command'
-import {AddressResolver} from '../../resolvers/address.resolver'
-import {HttpErrorHandler} from '../../services/httpErrorHandler.service'
 
 export class CommandOptions extends ProfileOptions {
     @option({
@@ -166,12 +166,11 @@ export default class extends ProfileCommand {
     }
 
     @metadata
-    execute(options: CommandOptions) {
-        this.spinner.start()
-
+    async execute(options: CommandOptions) {
         const profile = this.getProfile(options)
-        const address = new AddressResolver().resolve(options, profile)
+        const address = await new AddressResolver().resolve(options, profile)
 
+        this.spinner.start()
         const accountHttp = new AccountHttp(profile.url)
         const multisigHttp = new MultisigHttp(profile.url)
         const mosaicHttp = new MosaicHttp(profile.url)
@@ -193,6 +192,12 @@ export default class extends ProfileCommand {
             }, (err) => {
                 this.spinner.stop(true)
                 console.log(HttpErrorHandler.handleError(err))
+                if (err instanceof Object &&
+                    'message' in err &&
+                    JSON.parse(err.message).statusCode === 404) {
+                    console.log(chalk.blue('Info'), 'The account has to receive at least ' +
+                        'one transaction to be recorded on the network.')
+                }
             })
         }
 }

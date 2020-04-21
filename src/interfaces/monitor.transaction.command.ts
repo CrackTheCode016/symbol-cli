@@ -15,8 +15,9 @@
  * limitations under the License.
  *
  */
+import {ProfileCommand} from './profile.command'
+import {ProfileOptions} from './profile.options'
 import {option} from 'clime'
-import {ProfileCommand, ProfileOptions} from './profile.command'
 
 /**
  * Base command class to listen the blockchain.

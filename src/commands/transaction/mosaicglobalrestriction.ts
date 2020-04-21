@@ -15,9 +15,8 @@
  * limitations under the License.
  *
  */
-import {command, metadata, option} from 'clime'
-import {Deadline, MosaicRestrictionTransactionService, NamespaceHttp, RestrictionMosaicHttp} from 'symbol-sdk'
-import {AnnounceTransactionsCommand, AnnounceTransactionsOptions} from '../../interfaces/announce.transactions.command'
+import {AnnounceTransactionsOptions} from '../../interfaces/announceTransactions.options'
+import {AnnounceTransactionsCommand} from '../../interfaces/announce.transactions.command'
 import {AnnounceResolver} from '../../resolvers/announce.resolver'
 import {KeyResolver} from '../../resolvers/key.resolver'
 import {MaxFeeResolver} from '../../resolvers/maxFee.resolver'
@@ -25,6 +24,9 @@ import {MosaicIdAliasResolver} from '../../resolvers/mosaic.resolver'
 import {RestrictionTypeResolver} from '../../resolvers/restrictionType.resolver'
 import {RestrictionValueResolver} from '../../resolvers/restrictionValue.resolver'
 import {TransactionView} from '../../views/transactions/details/transaction.view'
+import {PasswordResolver} from '../../resolvers/password.resolver'
+import {Deadline, MosaicRestrictionTransactionService, NamespaceHttp, RestrictionMosaicHttp} from 'symbol-sdk'
+import {command, metadata, option} from 'clime'
 
 export class CommandOptions extends AnnounceTransactionsOptions {
     @option({
@@ -54,7 +56,14 @@ export class CommandOptions extends AnnounceTransactionsOptions {
 
     @option({
         flag: 'T',
-        description: 'New restriction type.',
+        description: 'New restriction type. (' +
+            'NONE, ' +
+            'EQ, ' +
+            'GE, ' +
+            'GT, ' +
+            'LE, ' +
+            'LT, ' +
+            'NE)',
     })
     newRestrictionType: string
 }
@@ -69,12 +78,13 @@ export default class extends AnnounceTransactionsCommand {
     @metadata
     async execute(options: CommandOptions) {
         const profile = this.getProfile(options)
-        const account = profile.decrypt(options)
-        const mosaicId = new MosaicIdAliasResolver().resolve(options)
-        const newRestrictionType = new RestrictionTypeResolver().resolve(options)
-        const restrictionKey = new KeyResolver().resolve(options, undefined, undefined, 'restrictionKey')
-        const newRestrictionValue = new RestrictionValueResolver().resolve(options)
-        const maxFee = new MaxFeeResolver().resolve(options)
+        const password = await new PasswordResolver().resolve(options)
+        const account = profile.decrypt(password)
+        const mosaicId = await new MosaicIdAliasResolver().resolve(options)
+        const newRestrictionType = await new RestrictionTypeResolver().resolve(options)
+        const restrictionKey = await new KeyResolver().resolve(options, undefined, 'restrictionKey')
+        const newRestrictionValue = await new RestrictionValueResolver().resolve(options)
+        const maxFee = await new MaxFeeResolver().resolve(options)
         const referenceMosaicId = new MosaicIdAliasResolver().optionalResolve(options)
 
         const restrictionMosaicHttp = new RestrictionMosaicHttp(profile.url)
@@ -98,7 +108,7 @@ export default class extends AnnounceTransactionsCommand {
 
         new TransactionView(transaction, signedTransaction).print()
 
-        const shouldAnnounce = new AnnounceResolver().resolve(options)
+        const shouldAnnounce = await new AnnounceResolver().resolve(options)
         if (shouldAnnounce && options.sync) {
             this.announceTransactionSync(signedTransaction, profile.address, profile.url)
         } else if (shouldAnnounce) {

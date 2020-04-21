@@ -18,9 +18,11 @@
 import chalk from 'chalk'
 import {command, metadata, option} from 'clime'
 import {Account, SimpleWallet} from 'symbol-sdk'
+
 import {AccountCredentialsTable, CreateProfileCommand, CreateProfileOptions} from '../../interfaces/create.profile.command'
 import {DefaultResolver} from '../../resolvers/default.resolver'
 import {GenerationHashResolver} from '../../resolvers/generationHash.resolver'
+import {NetworkCurrencyResolver} from '../../resolvers/networkCurrency.resolver'
 import {NetworkResolver} from '../../resolvers/network.resolver'
 import {PasswordResolver} from '../../resolvers/password.resolver'
 import {ProfileNameResolver} from '../../resolvers/profile.resolver'
@@ -47,24 +49,24 @@ export default class extends CreateProfileCommand {
 
     @metadata
     async execute(options: CommandOptions) {
-        const networkType = new NetworkResolver().resolve(options)
-        const save = new SaveResolver().resolve(options)
-
+        const networkType = await new NetworkResolver().resolve(options)
+        const save = await new SaveResolver().resolve(options)
         const account = Account.generateNewAccount(networkType)
         console.log(new AccountCredentialsTable(account).toString())
         if (save) {
-            options.url = new URLResolver().resolve(options)
-            const profileName = new ProfileNameResolver().resolve(options)
-            const password = new PasswordResolver().resolve(options)
-            const isDefault = new DefaultResolver().resolve(options)
+            options.url = await new URLResolver().resolve(options)
+            const profileName = await new ProfileNameResolver().resolve(options)
+            const password = await new PasswordResolver().resolve(options)
+            const isDefault = await new DefaultResolver().resolve(options)
             const generationHash = await new GenerationHashResolver().resolve(options)
+            const networkCurrency = await new NetworkCurrencyResolver().resolve(options)
 
             const simpleWallet = SimpleWallet.createFromPrivateKey(
                 profileName,
                 password,
                 account.privateKey,
                 networkType)
-            this.createProfile(simpleWallet, networkType, options.url, isDefault, generationHash)
+            this.createProfile(simpleWallet, options.url, isDefault, generationHash, networkCurrency)
             console.log( chalk.green('\nStored ' + profileName + ' profile'))
         }
     }

@@ -16,9 +16,9 @@
  *
  */
 
-import {HashType, SecretProofTransaction} from 'symbol-sdk'
 import {RecipientsView} from '../../../recipients.view'
 import {CellRecord} from '../transaction.view'
+import {LockHashAlgorithm, SecretProofTransaction} from 'symbol-sdk'
 
 export class SecretProofView {
   /**
@@ -29,7 +29,7 @@ export class SecretProofView {
   static get(tx: SecretProofTransaction): CellRecord {
     return {
       'Recipient': RecipientsView.get(tx.recipientAddress),
-      'Hash type': HashType[tx.hashType],
+      'Hash type': LockHashAlgorithm[tx.hashAlgorithm],
       'Secret': tx.secret,
       'Proof': tx.proof,
     }

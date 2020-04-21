@@ -15,10 +15,11 @@
  * limitations under the License.
  *
  */
+import {ProfileCommand} from '../../interfaces/profile.command'
+import {ProfileOptions} from '../../interfaces/profile.options'
+import {HttpErrorHandler} from '../../services/httpErrorHandler.service'
 import {command, metadata} from 'clime'
 import {Listener} from 'symbol-sdk'
-import {ProfileCommand, ProfileOptions} from '../../interfaces/profile.command'
-import {HttpErrorHandler} from '../../services/httpErrorHandler.service'
 
 @command({
     description: 'Monitor new blocks',

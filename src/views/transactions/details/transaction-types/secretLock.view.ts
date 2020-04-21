@@ -16,10 +16,10 @@
  *
  */
 
-import {HashType, SecretLockTransaction} from 'symbol-sdk'
 import {MosaicsView} from '../../../mosaics.view'
 import {RecipientsView} from '../../../recipients.view'
 import {CellRecord} from '../transaction.view'
+import {LockHashAlgorithm, SecretLockTransaction} from 'symbol-sdk'
 
 export class SecretLockView {
   /**
@@ -32,7 +32,7 @@ export class SecretLockView {
       'Recipient': RecipientsView.get(tx.recipientAddress),
       ...MosaicsView.get([tx.mosaic]),
       'Duration': tx.duration.toString(),
-      'Hash type': HashType[tx.hashType],
+      'Hash type': LockHashAlgorithm[tx.hashAlgorithm],
       'Secret': tx.secret,
     }
   }

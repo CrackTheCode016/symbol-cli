@@ -15,9 +15,10 @@
  * limitations under the License.
  *
  */
+import {ProfileCommand} from './profile.command'
+import {ProfileOptions} from './profile.options'
 import {option} from 'clime'
 import {Order, QueryParams} from 'symbol-sdk'
-import {ProfileCommand, ProfileOptions} from './profile.command'
 
 /**
  * Base command class to retrieve transactions from an account.

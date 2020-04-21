@@ -1,8 +1,11 @@
-import {expect} from 'chai'
 import * as fs from 'fs'
-import {NetworkType, Password, SimpleWallet} from 'symbol-sdk'
 import {ProfileCommand} from '../../src/interfaces/profile.command'
 import {ProfileRepository} from '../../src/respositories/profile.repository'
+import {NetworkType, Password, SimpleWallet} from 'symbol-sdk'
+import {expect} from 'chai'
+import {NetworkCurrency} from '../../src/models/networkCurrency.model'
+
+const networkCurrency = NetworkCurrency.createFromDTO({namespaceId: 'symbol.xym', divisibility: 6})
 
 describe('Profile Command', () => {
     let repositoryFileUrl: string
@@ -20,8 +23,9 @@ describe('Profile Command', () => {
     }
 
     const removeAccountsFile = () => {
-        if (fs.existsSync(process.env.HOME || process.env.USERPROFILE + '/' + repositoryFileUrl)) {
-            fs.unlinkSync(process.env.HOME || process.env.USERPROFILE + '/' + repositoryFileUrl)
+        const file = (process.env.HOME  || process.env.USERPROFILE) + '/' + repositoryFileUrl
+        if (fs.existsSync(file)) {
+            fs.unlinkSync(file)
         }
     }
 
@@ -45,21 +49,21 @@ describe('Profile Command', () => {
     })
 
     it('should get a new profile', () => {
-        new ProfileRepository(repositoryFileUrl).save(wallet, 'http://localhost:3000', '1')
-        const profileOptions = {profile: wallet.name}
-        const profile = command['getProfile'](profileOptions)
+        new ProfileRepository(repositoryFileUrl).save(wallet, 'http://localhost:3000', '1', networkCurrency)
+        const options = {profile: wallet.name}
+        const profile = command['getProfile'](options)
         expect(profile.name).to.equal(wallet.name)
     })
 
     it('should not get a profile that does not exist', () => {
-        const profileOptions = {profile: 'random'}
-        expect(() => command['getProfile'](profileOptions))
+        const options = {profile: 'random'}
+        expect(() => command['getProfile'](options))
             .to.throws(Error)
     })
 
     it('should get a profile saved as default', () => {
         const profileRepository = new ProfileRepository(repositoryFileUrl)
-        profileRepository.save(wallet, 'http://localhost:3000', '1')
+        profileRepository.save(wallet, 'http://localhost:3000', '1', networkCurrency)
         profileRepository.setDefault(wallet.name)
         const profile = command['getDefaultProfile']()
         expect(profile.name).to.be.equal(wallet.name)
@@ -67,13 +71,13 @@ describe('Profile Command', () => {
 
     it('should throw error if trying to retrieve a default profile that does not exist', () => {
         const profileRepository = new ProfileRepository(repositoryFileUrl)
-        profileRepository.save(wallet, 'http://localhost:3000', '1')
+        profileRepository.save(wallet, 'http://localhost:3000', '1', networkCurrency)
         expect(() => command['getDefaultProfile']()).to.be.throws(Error)
     })
 
     it('should get all  saved profiles', () => {
         const profileRepository = new ProfileRepository(repositoryFileUrl)
-        profileRepository.save(wallet, 'http://localhost:3000', '1')
+        profileRepository.save(wallet, 'http://localhost:3000', '1', networkCurrency)
         const profile = command['findAllProfiles']()[0]
         expect(profile.name).to.be.equal(wallet.name)
     })
