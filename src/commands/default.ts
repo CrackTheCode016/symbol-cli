@@ -67,6 +67,10 @@ export const subcommands = [
         brief: 'Get node related information',
     },
     {
+        name: 'template',
+        brief: 'Manage node configurations via templates',
+    },
+    {
         name: 'profile',
         brief: 'Manage profiles',
     },
