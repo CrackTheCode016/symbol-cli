@@ -16,16 +16,27 @@
  *
  */
 import {expect} from 'chai'
-import {ProfileNameResolver} from '../../src/resolvers/profile.resolver'
+import {LockHashAlgorithm} from 'symbol-sdk'
 import {ProofResolver} from '../../src/resolvers/proof.resolver'
 
 describe('Proof resolver', () => {
-
-    it('should return proof', () => {
-        const proof = 'proof'
-        const profileOptions = {proof} as any
-        expect(new ProofResolver().resolve(profileOptions))
+    it('should return proof', async () => {
+        const proof = '64CHAR0000000000000000000000000000000000000000000000000000000000'
+        expect(await new ProofResolver().resolve({proof} as any, LockHashAlgorithm.Op_Hash_160))
             .to.be.equal(proof)
     })
 
+    it('should return proof with a length of 40 when declared as Op_Hash_160', async () => {
+        const proof = '40CHAR0000000000000000000000000000000000'
+        expect(await new ProofResolver().resolve({proof} as any, LockHashAlgorithm.Op_Hash_160))
+            .to.be.equal(proof)
+    })
+
+    it('should change key', async () => {
+        const key = '64CHAR0000000000000000000000000000000000000000000000000000000000'
+        const options = {key} as any
+        expect(await new ProofResolver()
+            .resolve(options, undefined, 'altText', 'key'))
+            .to.be.equal(key)
+    })
 })

@@ -15,13 +15,15 @@
  * limitations under the License.
  *
  */
-import {expect} from 'chai'
-import {ReceiptService} from '../../src/services/receipt.service'
 
-describe('Receipt service', () => {
+import {NetworkType, Password, SimpleWallet} from 'symbol-sdk'
 
-    it('should create receipt service', () => {
-        expect(new ReceiptService()).to.not.be.equal(undefined)
-    })
+import {NetworkCurrency} from '../../../src/models/networkCurrency.model'
+import {Profile} from '../../../src/models/profile.model'
 
-})
+const simpleWallet1 = SimpleWallet.create('test', new Password('password'), NetworkType.MIJIN_TEST)
+const url1 = 'http://localhost:1234'
+const networkGenerationHash1 = 'test'
+const networkCurrency = NetworkCurrency.createFromDTO({namespaceId: 'symbol.xym', divisibility: 6})
+
+export const mockProfile1 = new Profile(simpleWallet1, url1, networkGenerationHash1, networkCurrency, 2)

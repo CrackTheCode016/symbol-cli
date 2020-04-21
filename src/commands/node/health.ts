@@ -15,13 +15,14 @@
  * limitations under the License.
  *
  */
+import {ProfileCommand} from '../../interfaces/profile.command'
+import {ProfileOptions} from '../../interfaces/profile.options'
+import {HttpErrorHandler} from '../../services/httpErrorHandler.service'
 import chalk from 'chalk'
 import * as Table from 'cli-table3'
 import {HorizontalTable} from 'cli-table3'
 import {command, metadata} from 'clime'
 import {NodeHealth, NodeHttp} from 'symbol-sdk'
-import {ProfileCommand, ProfileOptions} from '../../interfaces/profile.command'
-import {HttpErrorHandler} from '../../services/httpErrorHandler.service'
 
 export class NodeHealthTable {
     private readonly table: HorizontalTable
@@ -45,7 +46,7 @@ export class NodeHealthTable {
 }
 
 @command({
-    description: 'Supplies information regarding the connection and services status',
+    description: 'Get information about the connection and services status',
 })
 export default class extends ProfileCommand {
 
@@ -55,10 +56,9 @@ export default class extends ProfileCommand {
 
     @metadata
     execute(options: ProfileOptions) {
-        this.spinner.start()
-
         const profile = this.getProfile(options)
 
+        this.spinner.start()
         const nodeHttp = new NodeHttp(profile.url)
         nodeHttp.getNodeHealth()
             .subscribe((health) => {

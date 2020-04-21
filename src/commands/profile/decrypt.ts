@@ -15,9 +15,11 @@
  * limitations under the License.
  *
  */
-import {command, metadata} from 'clime'
 import {AccountCredentialsTable} from '../../interfaces/create.profile.command'
-import {ProfileCommand, ProfileOptions} from '../../interfaces/profile.command'
+import {ProfileCommand} from '../../interfaces/profile.command'
+import {ProfileOptions} from '../../interfaces/profile.options'
+import {PasswordResolver} from '../../resolvers/password.resolver'
+import {command, metadata} from 'clime'
 
 @command({
     description: 'View profile credentials',
@@ -29,9 +31,10 @@ export default class extends ProfileCommand {
     }
 
     @metadata
-    execute(options: ProfileOptions) {
+    async execute(options: ProfileOptions) {
         const profile = this.getProfile(options)
-        const account = profile.decrypt(options)
+        const password = await new PasswordResolver().resolve(options)
+        const account = profile.decrypt(password)
         const text = new AccountCredentialsTable(account).toString()
         console.log(text)
     }

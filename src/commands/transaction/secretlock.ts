@@ -14,9 +14,8 @@
  * limitations under the License.
  *
  */
-import {command, metadata, option} from 'clime'
-import {Deadline, Mosaic, SecretLockTransaction} from 'symbol-sdk'
-import {AnnounceTransactionsCommand, AnnounceTransactionsOptions} from '../../interfaces/announce.transactions.command'
+import {AnnounceTransactionsOptions} from '../../interfaces/announceTransactions.options'
+import {AnnounceTransactionsCommand} from '../../interfaces/announce.transactions.command'
 import {AddressAliasResolver} from '../../resolvers/address.resolver'
 import {AmountResolver} from '../../resolvers/amount.resolver'
 import {AnnounceResolver} from '../../resolvers/announce.resolver'
@@ -26,6 +25,9 @@ import {MaxFeeResolver} from '../../resolvers/maxFee.resolver'
 import {MosaicIdAliasResolver} from '../../resolvers/mosaic.resolver'
 import {SecretResolver} from '../../resolvers/secret.resolver'
 import {TransactionView} from '../../views/transactions/details/transaction.view'
+import {PasswordResolver} from '../../resolvers/password.resolver'
+import {Deadline, Mosaic, SecretLockTransaction} from 'symbol-sdk'
+import {command, metadata, option} from 'clime'
 
 export class CommandOptions extends AnnounceTransactionsOptions {
     @option({
@@ -54,7 +56,7 @@ export class CommandOptions extends AnnounceTransactionsOptions {
     secret: string
 
     @option({
-        description: 'Algorithm used to hash the proof (Op_Sha3_256, Op_Keccak_256, Op_Hash_160, Op_Hash_256).',
+        description: 'Algorithm used to hash the proof (Op_Sha3_256, Op_Hash_160, Op_Hash_256).',
         flag: 'H',
     })
     hashAlgorithm: string
@@ -75,20 +77,21 @@ export default class extends AnnounceTransactionsCommand {
     }
 
     @metadata
-    execute(options: CommandOptions) {
+    async execute(options: CommandOptions) {
         const profile = this.getProfile(options)
-        const account = profile.decrypt(options)
-        const mosaicId = new MosaicIdAliasResolver()
-            .resolve(options, undefined, 'Enter the locked mosaic identifier or alias: ')
-        const amount = new AmountResolver()
-            .resolve(options, undefined, 'Enter the absolute amount of mosaic units to lock: ')
-        const recipientAddress = new AddressAliasResolver()
-            .resolve(options, undefined, 'Enter the address (or @alias) that receives the funds once unlocked: ', 'recipientAddress')
-        const duration = new DurationResolver()
-            .resolve(options, undefined, 'Enter the number of blocks for which a lock should be valid: ')
-        const secret = new SecretResolver().resolve(options)
-        const hashAlgorithm = new HashAlgorithmResolver().resolve(options)
-        const maxFee = new MaxFeeResolver().resolve(options)
+        const password = await new PasswordResolver().resolve(options)
+        const account = profile.decrypt(password)
+        const mosaicId = await new MosaicIdAliasResolver()
+            .resolve(options, 'Enter the locked mosaic identifier or alias:')
+        const amount = await new AmountResolver()
+            .resolve(options, 'Enter the absolute amount of mosaic units to lock:')
+        const recipientAddress = await new AddressAliasResolver()
+            .resolve(options, undefined, 'Enter the address (or @alias) that receives the funds once unlocked:', 'recipientAddress')
+        const duration = await new DurationResolver()
+            .resolve(options, 'Enter the number of blocks for which a lock should be valid:')
+        const secret = await new SecretResolver().resolve(options)
+        const hashAlgorithm = await new HashAlgorithmResolver().resolve(options)
+        const maxFee = await new MaxFeeResolver().resolve(options)
 
         const transaction = SecretLockTransaction.create(
             Deadline.create(),
@@ -103,7 +106,7 @@ export default class extends AnnounceTransactionsCommand {
 
         new TransactionView(transaction, signedTransaction).print()
 
-        const shouldAnnounce = new AnnounceResolver().resolve(options)
+        const shouldAnnounce = await new AnnounceResolver().resolve(options)
         if (shouldAnnounce && options.sync) {
             this.announceTransactionSync(signedTransaction, profile.address, profile.url)
         } else if (shouldAnnounce) {

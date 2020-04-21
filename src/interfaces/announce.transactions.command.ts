@@ -15,13 +15,13 @@
  * limitations under the License.
  *
  */
+import {HttpErrorHandler} from '../services/httpErrorHandler.service'
+import {ProfileCommand} from './profile.command'
+import {ProfileOptions} from './profile.options'
 import chalk from 'chalk'
-import {option} from 'clime'
-import {Address, Listener, ReceiptHttp, SignedTransaction, TransactionHttp, TransactionService} from 'symbol-sdk'
+import {Address, Listener, SignedTransaction, Transaction, TransactionAnnounceResponse, TransactionHttp } from 'symbol-sdk'
 import {merge} from 'rxjs'
 import {filter, mergeMap, tap} from 'rxjs/operators'
-import {ProfileCommand, ProfileOptions} from './profile.command'
-import {HttpErrorHandler} from '../services/httpErrorHandler.service'
 
 /**
  * Base command class to announce transactions.
@@ -45,6 +45,9 @@ export abstract class AnnounceTransactionsCommand extends ProfileCommand {
             .subscribe((ignored) => {
                 this.spinner.stop(true)
                 console.log(chalk.green('\nTransaction announced correctly.'))
+                console.log(chalk.blue('Info'), 'To check if the network confirms or rejects the transaction, ' +
+                    'run the command \'symbol-cli transaction status\'.')
+
             }, (err) => {
                 this.spinner.stop(true)
                 console.log(HttpErrorHandler.handleError(err))
@@ -53,18 +56,23 @@ export abstract class AnnounceTransactionsCommand extends ProfileCommand {
 
     /**
      * Announces a transaction waiting for the response.
-     * @param {SignedTransaction} signedTransaction
+     * @param {SignedTransaction} Signed transaction.
      * @param {Address} senderAddress - Address of the account sending the transaction.
      * @param {string} url - Node URL.
      */
     protected announceTransactionSync(signedTransaction: SignedTransaction, senderAddress: Address, url: string) {
         this.spinner.start()
         const transactionHttp = new TransactionHttp(url)
-        const receiptHttp = new ReceiptHttp(url)
         const listener = new Listener(url)
-        const transactionService = new TransactionService(transactionHttp, receiptHttp)
         listener.open().then(() => {
-            merge(transactionService.announce(signedTransaction, listener),
+            merge(
+                transactionHttp.announce(signedTransaction),
+                listener
+                    .confirmed(senderAddress)
+                    .pipe(
+                        filter((transaction) => transaction.transactionInfo !== undefined
+                            && transaction.transactionInfo.hash === signedTransaction.hash),
+                    ),
                 listener
                     .status(senderAddress)
                     .pipe(
@@ -72,10 +80,17 @@ export abstract class AnnounceTransactionsCommand extends ProfileCommand {
                         tap((error) => {
                             throw new Error(error.code)
                         })))
-                .subscribe((ignored) => {
-                    listener.close()
-                    this.spinner.stop(true)
-                    console.log(chalk.green('\nTransaction confirmed.'))
+                .subscribe((response) => {
+                    if (response instanceof TransactionAnnounceResponse) {
+                        this.spinner.stop(true)
+                        console.log(chalk.green('\nTransaction announced.'))
+                        this.spinner.start()
+                    }
+                    else if (response instanceof Transaction){
+                        listener.close()
+                        this.spinner.stop(true)
+                        console.log(chalk.green('\nTransaction confirmed.'))
+                    }
                 }, (err) => {
                     listener.close()
                     this.spinner.stop(true)
@@ -90,8 +105,8 @@ export abstract class AnnounceTransactionsCommand extends ProfileCommand {
 
     /**
      * Announces a hash lock transaction. Once this is confirmed, announces an aggregate transaction.
-     * @param {SignedTransaction} signedHashLockTransaction
-     * @param {SignedTransaction} signedAggregateTransaction
+     * @param {signedHashLockTransaction} Signed hash lock transaction.
+     * @param {signedAggregateTransaction} Signed aggregate transaction.
      * @param {Address} senderAddress - Address of the account sending the transaction.
      * @param {string} url - Node URL.
      */
@@ -144,60 +159,4 @@ export abstract class AnnounceTransactionsCommand extends ProfileCommand {
             console.log(HttpErrorHandler.handleError(err))
         })
     }
-}
-
-/**
- * Announce transactions options
- */
-export class AnnounceTransactionsOptions extends ProfileOptions {
-    @option({
-        flag: 'p',
-        description: 'Profile password.',
-    })
-    password: string
-
-    @option({
-        flag: 'f',
-        description: 'Maximum fee (absolute amount).',
-    })
-    maxFee: string
-
-    @option({
-        description: '(Optional) Wait until the server confirms or rejects the transaction.',
-        toggle: true,
-    })
-    sync: any
-
-    @option({
-        description: '(Optional) Announce the transaction without double confirmation.',
-        toggle: true,
-    })
-    announce: any
-
-}
-
-/**
- * Announce aggregate transactions options
- */
-export class AnnounceAggregateTransactionsOptions extends AnnounceTransactionsOptions {
-
-    @option({
-        flag: 'F',
-        description: 'Maximum fee (absolute amount) to announce the hash lock transaction.',
-    })
-    maxFeeHashLock: string
-
-    @option({
-        flag: 'D',
-        description: 'Hash lock duration expressed in blocks.',
-        default: '480',
-    })
-    duration: string
-
-    @option({
-        flag: 'L',
-        description: 'Relative amount of network mosaic to lock.',
-        default: '10',
-    })
-    amount: string
 }

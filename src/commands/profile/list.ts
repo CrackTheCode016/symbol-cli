@@ -15,9 +15,10 @@
  * limitations under the License.
  *
  */
+import {ProfileCommand} from '../../interfaces/profile.command'
+import {ProfileOptions} from '../../interfaces/profile.options'
 import chalk from 'chalk'
 import {command, metadata} from 'clime'
-import {ProfileCommand, ProfileOptions} from '../../interfaces/profile.command'
 
 export class CommandOptions extends ProfileOptions {}
 

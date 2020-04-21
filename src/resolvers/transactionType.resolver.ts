@@ -1,8 +1,26 @@
-import {ProfileOptions} from '../interfaces/profile.command'
-import {Profile} from '../models/profile'
-import {OptionsResolver} from '../options-resolver'
-import {TransactionTypeValidator} from '../validators/transactionType.validator'
+/*
+ *
+ * Copyright 2018-present NEM
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+import {Options} from 'clime'
+import {TransactionType} from 'symbol-sdk'
+
+import {OptionsChoiceResolver} from '../options-resolver'
 import {Resolver} from './resolver'
+import {TransactionTypeValidator} from '../validators/transactionType.validator'
 
 /**
  * Transaction type resolver
@@ -11,17 +29,26 @@ export class TransactionTypeResolver implements Resolver {
 
     /**
      * Resolves a transaction type provided by the user.
-     * @param {ProfileOptions} options - Command options.
-     * @param {Profile} secondSource - Secondary data source.
+     * @param {Options} options - Command options.
      * @param {string} altText - Alternative text.
-     * @returns {number}
+     * @param {string} altKey - Alternative key.
+     * @returns {Promise<number>}
      */
-    resolve(options: ProfileOptions, secondSource?: Profile, altText?: string): number {
-        const resolution = OptionsResolver(options,
-            'transactionType',
-            () => undefined,
-            altText ? altText : 'Enter the transaction type. Example: 4154 (Transfer): ').trim()
-        new TransactionTypeValidator().validate(resolution)
-        return parseInt(resolution, 16)
+    async resolve(options: Options, altText?: string, altKey?: string): Promise<number> {
+        const choices = Object
+            .keys(TransactionType)
+            .filter((key) => Number.isNaN(parseFloat(key)) && key !== 'RESERVED')
+            .map((string) => ({
+                title:  string,
+                value: `${TransactionType[string as any]}`,
+            }))
+
+        const value = +(await OptionsChoiceResolver(options,
+            altKey ? altKey : 'transactionType',
+            altText ? altText : 'Chose a transaction type:',
+            choices,
+            'select',
+            new TransactionTypeValidator()))
+        return value
     }
 }

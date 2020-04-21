@@ -15,12 +15,12 @@
  * limitations under the License.
  *
  */
+import {expect} from 'chai'
+import {WebhookService} from '../../src/services/webhook.service'
 
-import {NetworkType, Password, SimpleWallet} from 'symbol-sdk'
-import {Profile} from '../../src/models/profile'
-
-const simpleWallet1 = SimpleWallet.create('test', new Password('password'), NetworkType.MIJIN_TEST)
-const url1 = 'http://localhost:1234'
-const networkGenerationHash1 = 'test'
-
-export const mockProfile1 = new Profile(simpleWallet1, url1, networkGenerationHash1)
+describe('Webhook service', () => {
+  it('should create a Webhook service', () => {
+    const webhookService = new WebhookService()
+    expect(webhookService).to.be.an.instanceOf(WebhookService)
+  })
+})

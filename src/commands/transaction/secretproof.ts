@@ -14,9 +14,8 @@
  * limitations under the License.
  *
  */
-import {command, metadata, option} from 'clime'
-import {Deadline, SecretProofTransaction} from 'symbol-sdk'
-import {AnnounceTransactionsCommand, AnnounceTransactionsOptions} from '../../interfaces/announce.transactions.command'
+import {AnnounceTransactionsOptions} from '../../interfaces/announceTransactions.options'
+import {AnnounceTransactionsCommand} from '../../interfaces/announce.transactions.command'
 import {AddressAliasResolver} from '../../resolvers/address.resolver'
 import {AnnounceResolver} from '../../resolvers/announce.resolver'
 import {HashAlgorithmResolver} from '../../resolvers/hashAlgorithm.resolver'
@@ -24,8 +23,11 @@ import {MaxFeeResolver} from '../../resolvers/maxFee.resolver'
 import {ProofResolver} from '../../resolvers/proof.resolver'
 import {SecretResolver} from '../../resolvers/secret.resolver'
 import {TransactionView} from '../../views/transactions/details/transaction.view'
+import {PasswordResolver} from '../../resolvers/password.resolver'
+import {Deadline, SecretProofTransaction} from 'symbol-sdk'
+import {command, metadata, option} from 'clime'
 
-export class CommandOptions extends AnnounceTransactionsOptions {
+export class SecretProofCommandOptions extends AnnounceTransactionsOptions {
 
     @option({
         description: 'Proof hashed in hexadecimal. ',
@@ -40,7 +42,7 @@ export class CommandOptions extends AnnounceTransactionsOptions {
     proof: string
 
     @option({
-        description: 'Algorithm used to hash the proof (Op_Sha3_256, Op_Keccak_256, Op_Hash_160, Op_Hash_256). ',
+        description: 'Algorithm used to hash the proof (Op_Sha3_256, Op_Hash_160, Op_Hash_256). ',
         flag: 'H',
     })
     hashAlgorithm: string
@@ -61,15 +63,16 @@ export default class extends AnnounceTransactionsCommand {
     }
 
     @metadata
-    execute(options: CommandOptions) {
+    async execute(options: SecretProofCommandOptions) {
         const profile = this.getProfile(options)
-        const account = profile.decrypt(options)
-        const recipientAddress = new AddressAliasResolver()
-            .resolve(options, undefined, 'Enter the address (or @alias) that receives the funds once unlocked: ', 'recipientAddress')
-        const secret = new SecretResolver().resolve(options)
-        const proof = new ProofResolver().resolve(options)
-        const hashAlgorithm = new HashAlgorithmResolver().resolve(options)
-        const maxFee = new MaxFeeResolver().resolve(options)
+        const password = await new PasswordResolver().resolve(options)
+        const account = profile.decrypt(password)
+        const recipientAddress = await new AddressAliasResolver()
+            .resolve(options, undefined, 'Enter the address (or @alias) that receives the funds once unlocked:', 'recipientAddress')
+        const secret = await new SecretResolver().resolve(options)
+        const hashAlgorithm = await new HashAlgorithmResolver().resolve(options)
+        const proof = await new ProofResolver().resolve(options, hashAlgorithm)
+        const maxFee = await new MaxFeeResolver().resolve(options)
 
         const transaction = SecretProofTransaction.create(
             Deadline.create(),
@@ -83,7 +86,7 @@ export default class extends AnnounceTransactionsCommand {
 
         new TransactionView(transaction, signedTransaction).print()
 
-        const shouldAnnounce = new AnnounceResolver().resolve(options)
+        const shouldAnnounce = await new AnnounceResolver().resolve(options)
         if (shouldAnnounce && options.sync) {
             this.announceTransactionSync(signedTransaction, profile.address, profile.url)
         } else if (shouldAnnounce) {
